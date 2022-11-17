@@ -49,3 +49,13 @@ class AccountChangePasswordSerializer(serializers.Serializer):  # noqa
         instance.save()
 
         return instance
+
+
+class PasswordResetRequestEmailSerializer(serializers.Serializer):  # noqa
+    email = serializers.EmailField(required=True)
+
+    def validate(self, data):
+        data = super().validate(data)
+        if not CustomAccount.objects.get_queryset().filter(email=data.get('email')):
+            raise serializers.ValidationError({'detail': _('user with this email is not registered')})
+        return data

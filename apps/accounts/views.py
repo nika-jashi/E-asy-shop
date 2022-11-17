@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -7,7 +8,11 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from drf_spectacular.utils import extend_schema
 
 from apps.accounts.models import CustomAccount
-from apps.accounts.serializers import AccountRegistrationSerializer, AccountChangePasswordSerializer
+from apps.accounts.serializers import (AccountRegistrationSerializer,
+                                       AccountChangePasswordSerializer,
+                                       PasswordResetRequestEmailSerializer)
+from apps.utils.email_sender import SendEmail
+from apps.utils.otp_generator import OTP_generator
 
 
 @extend_schema(tags=["Auth"])
@@ -67,3 +72,22 @@ class AccountChangePasswordView(APIView):
         serializer.save()
 
         return Response({"detail": "You successfully changed your password."}, status=status.HTTP_200_OK)
+
+
+@extend_schema(tags=["Auth"])
+class PasswordResetRequestEmailView(APIView):
+    serializer_class = PasswordResetRequestEmailSerializer
+
+    def post(self, request):
+        data = request.data
+        otp = OTP_generator()
+
+        cache.set(otp, data.get('email'))
+
+        serializer = PasswordResetRequestEmailSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        SendEmail.send_email(subject="Es-Shop Password Reset for your account",
+                             body=f"Your Password Reset Code Is: {otp} (Code is valid for 10 minutes)",
+                             to=[serializer.data.get("email")])
+
+        return Response({"detail": "We Have Sent You Message To your email"}, status=status.HTTP_200_OK)
