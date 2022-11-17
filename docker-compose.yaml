@@ -16,7 +16,7 @@ services:
       timeout: 5s
       retries: 3
   web_api:
-    image: cms_api:latest
+    image: web_api:latest
     build: .
     restart: always
     ports:
