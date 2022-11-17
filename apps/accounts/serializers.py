@@ -27,3 +27,25 @@ class AccountRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         instance = CustomAccount.objects.create_user(**validated_data)
         return instance
+
+
+class AccountChangePasswordSerializer(serializers.Serializer):  # noqa
+    old_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True)
+    confirm_password = serializers.CharField(required=True, write_only=True)
+
+    def validate(self, data):
+        user = self.context.get('request').user
+        if not user.check_password(data.get("old_password")):
+            raise serializers.ValidationError({"old_password": "Old password is not correct"})
+
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({"new_password": "Password fields didn't match."})
+
+        return data
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['new_password'])
+        instance.save()
+
+        return instance
