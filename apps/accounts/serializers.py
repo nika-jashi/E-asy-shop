@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
 
@@ -59,3 +60,39 @@ class PasswordResetRequestEmailSerializer(serializers.Serializer):  # noqa
         if not CustomAccount.objects.get_queryset().filter(email=data.get('email')):
             raise serializers.ValidationError({'detail': _('user with this email is not registered')})
         return data
+
+
+class OTPValidationSerializer(serializers.Serializer):  # noqa
+    OTP = serializers.CharField(write_only=True,
+                                required=True,
+                                help_text="Please input your otp code")
+    email = serializers.CharField(read_only=True)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        email = cache.get(attrs.get('OTP'))
+        if not email:
+            raise serializers.ValidationError({'detail': _('otp is wrong or expired')})
+
+        attrs["email"] = email
+        return attrs
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):  # noqa
+    new_password = serializers.CharField(write_only=True)
+    new_password_confirm = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        data = super().validate(data)
+        new_password = data.get("new_password")
+        new_password_confirm = data.get("new_password_confirm")
+
+        if new_password != new_password_confirm:
+            raise serializers.ValidationError({"new_password_confirm": _("Passwords are not matched.")})
+
+        return data
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data.get('new_password'))
+        instance.save()
+        return instance
