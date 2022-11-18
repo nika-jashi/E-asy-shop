@@ -26,14 +26,14 @@ def not_contains_whitespace(field: str) -> None:
 
 
 def contains_uppercase(field: str) -> None:
-    if not re.search(r"[A-Z]+$", field):
+    if not re.search(r"[A-Z]", field):
         raise ValidationError(
             _("This field must contain at least one uppercase character.")
         )
 
 
 def contains_lowercase(field: str) -> None:
-    if not re.search(r"[a-z]+$", field):
+    if not re.search(r"[a-z]", field):
         raise ValidationError(
             _("This field must contain at least one lowercase character.")
         )

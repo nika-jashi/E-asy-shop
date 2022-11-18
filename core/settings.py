@@ -18,7 +18,8 @@ DEBUG = os.environ.get('DEBUG_VALUE')
 ALLOWED_HOSTS = ['*']
 
 PROJECT_APPS = [
-    'apps.accounts.apps.AccountsConfig'
+    'apps.accounts.apps.AccountsConfig',
+    'apps.products.apps.ProductsConfig',
 ]
 
 THIRD_PARTY_APPS = [
