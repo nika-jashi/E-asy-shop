@@ -1,17 +1,30 @@
 from django.core.cache import cache
 from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import MinLengthValidator
 
 from apps.accounts.models import CustomAccount
+
+from apps.utils.custom_validators import (not_contains_symbols,
+                                          not_contains_whitespace,
+                                          contains_uppercase,
+                                          contains_digits,
+                                          contains_lowercase)
 
 
 class AccountRegistrationSerializer(serializers.ModelSerializer):
     """A serializer for creating new users. Includes all the required
        fields and validations, plus a repeated password. """
 
-    password = serializers.CharField(max_length=255, write_only=True)
+    password = serializers.CharField(max_length=255, write_only=True, validators=[not_contains_whitespace,
+                                                                                  contains_uppercase,
+                                                                                  contains_digits,
+                                                                                  contains_lowercase,
+                                                                                  MinLengthValidator(8)])
     confirm_password = serializers.CharField(max_length=255, write_only=True)
     email = serializers.EmailField()
+    first_name = serializers.CharField(max_length=56, validators=[not_contains_symbols])
+    last_name = serializers.CharField(max_length=56, validators=[not_contains_symbols])
 
     class Meta:
         model = CustomAccount
@@ -34,7 +47,11 @@ class AccountChangePasswordSerializer(serializers.Serializer):  # noqa
     """A serializer for user to change password when authenticated. Includes all the required
        fields and validations, plus a repeated password. """
     old_password = serializers.CharField(required=True, write_only=True)
-    new_password = serializers.CharField(required=True, write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True, validators=[not_contains_whitespace,
+                                                                                     contains_uppercase,
+                                                                                     contains_digits,
+                                                                                     contains_lowercase,
+                                                                                     MinLengthValidator(8)])
     confirm_password = serializers.CharField(required=True, write_only=True)
 
     def validate(self, data):
@@ -86,8 +103,12 @@ class OTPValidationSerializer(serializers.Serializer):  # noqa
 class PasswordResetConfirmSerializer(serializers.Serializer):  # noqa
     """A serializer for user to confirm new password and obtain full access of account
      includes all password, plus a repeated password. """
-    new_password = serializers.CharField(write_only=True)
-    new_password_confirm = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(required=True, write_only=True, validators=[not_contains_whitespace,
+                                                                                     contains_uppercase,
+                                                                                     contains_digits,
+                                                                                     contains_lowercase,
+                                                                                     MinLengthValidator(8)])
+    new_password_confirm = serializers.CharField(required=True, write_only=True)
 
     def validate(self, data):
         data = super().validate(data)
