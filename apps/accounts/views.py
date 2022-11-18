@@ -11,7 +11,8 @@ from drf_spectacular.utils import extend_schema
 from apps.accounts.models import CustomAccount
 from apps.accounts.serializers import (AccountRegistrationSerializer,
                                        AccountChangePasswordSerializer,
-                                       PasswordResetRequestEmailSerializer, PasswordResetConfirmSerializer,
+                                       PasswordResetRequestEmailSerializer,
+                                       PasswordResetConfirmSerializer,
                                        OTPValidationSerializer)
 from apps.utils.email_sender import SendEmail
 from apps.utils.otp_generator import OTP_generator
@@ -59,6 +60,7 @@ class AccountLoginView(TokenObtainPairView):
 
 @extend_schema(tags=["password_change"])
 class AccountChangePasswordView(APIView):
+    """View for user to change password when authenticated"""
     serializer_class = AccountChangePasswordSerializer
     model = CustomAccount
     permission_classes = (IsAuthenticated,)
@@ -78,6 +80,7 @@ class AccountChangePasswordView(APIView):
 
 @extend_schema(tags=["password_reset"])
 class PasswordResetRequestEmailView(APIView):
+    """View for user to request password reset by email verification, when user is not authenticated"""
     serializer_class = PasswordResetRequestEmailSerializer
 
     def post(self, request):
@@ -97,6 +100,8 @@ class PasswordResetRequestEmailView(APIView):
 
 @extend_schema(tags=["password_reset"])
 class PasswordResetVerifyEmailView(APIView):
+    """View for user to verify password reset by input of generated otp sent on email
+       this view also generated JWT token for changing password afterwards"""
     serializer_class = OTPValidationSerializer
 
     def post(self, request):
@@ -118,6 +123,7 @@ class PasswordResetVerifyEmailView(APIView):
 
 @extend_schema(tags=["password_reset"])
 class PasswordResetConfirmView(APIView):
+    """View for user to confirm new password after verifying email and otp from request"""
     serializer_class = PasswordResetConfirmSerializer
     queryset = CustomAccount.objects.get_queryset().all()
     permission_classes = (IsAuthenticated,)

@@ -31,6 +31,8 @@ class AccountRegistrationSerializer(serializers.ModelSerializer):
 
 
 class AccountChangePasswordSerializer(serializers.Serializer):  # noqa
+    """A serializer for user to change password when authenticated. Includes all the required
+       fields and validations, plus a repeated password. """
     old_password = serializers.CharField(required=True, write_only=True)
     new_password = serializers.CharField(required=True, write_only=True)
     confirm_password = serializers.CharField(required=True, write_only=True)
@@ -53,6 +55,8 @@ class AccountChangePasswordSerializer(serializers.Serializer):  # noqa
 
 
 class PasswordResetRequestEmailSerializer(serializers.Serializer):  # noqa
+    """A serializer for user to request password reset when is not authenticated.
+     Includes email field for sending otp and all required validations. """
     email = serializers.EmailField(required=True)
 
     def validate(self, data):
@@ -63,22 +67,25 @@ class PasswordResetRequestEmailSerializer(serializers.Serializer):  # noqa
 
 
 class OTPValidationSerializer(serializers.Serializer):  # noqa
+    """A serializer for user to verify sent otp includes all required verifications. """
     OTP = serializers.CharField(write_only=True,
                                 required=True,
                                 help_text="Please input your otp code")
     email = serializers.CharField(read_only=True)
 
-    def validate(self, attrs):
-        attrs = super().validate(attrs)
-        email = cache.get(attrs.get('OTP'))
+    def validate(self, data):
+        data = super().validate(data)
+        email = cache.get(data.get('OTP'))
         if not email:
             raise serializers.ValidationError({'detail': _('otp is wrong or expired')})
 
-        attrs["email"] = email
-        return attrs
+        data["email"] = email
+        return data
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):  # noqa
+    """A serializer for user to confirm new password and obtain full access of account
+     includes all password, plus a repeated password. """
     new_password = serializers.CharField(write_only=True)
     new_password_confirm = serializers.CharField(write_only=True)
 
