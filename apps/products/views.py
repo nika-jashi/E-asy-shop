@@ -12,7 +12,7 @@ from apps.products.serializers import (ProductCreationSerializer,
                                        ProductUpdateSerializer)
 
 
-@extend_schema(tags=["product_create"])
+@extend_schema(tags=["product"])
 class ProductCreationView(APIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ProductCreationSerializer
@@ -26,7 +26,7 @@ class ProductCreationView(APIView):
         return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
 
-@extend_schema(tags=["product-list"])
+@extend_schema(tags=["product"])
 class ProductListView(APIView):
     serializer_class = ProductListSerializer
 
@@ -57,7 +57,7 @@ class ProductDetailView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@extend_schema(tags=["product-update"])
+@extend_schema(tags=["product"])
 class ProductUpdateView(APIView):
     serializer_class = ProductUpdateSerializer
     permission_classes = (IsAuthenticated,)
@@ -70,15 +70,17 @@ class ProductUpdateView(APIView):
 
     def patch(self, request, pk):
         product_information = Product.objects.filter(pk=pk).first()
-        print(product_information)
         serializer = ProductUpdateSerializer(instance=product_information, data=request.data, partial=True)
-        if Product.objects.filter(seller=request.user).exists():
+        product_owner = Product.objects.filter(seller=request.user)
+        if product_owner == request.user:
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.data, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"msg": "Error"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema(tags=["product"])
 class ProductDeleteView(APIView):
     permission_classes = (IsAuthenticated,)
 

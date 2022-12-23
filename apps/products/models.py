@@ -11,3 +11,18 @@ class Product(models.Model):
 
     def __str__(self):
         return self.product_title
+
+
+class MainCategory(models.Model):
+    name = models.CharField(max_length=128)
+
+    def __str__(self):
+        return self.name
+
+
+class SubCategory(models.Model):
+    sub_category_name = models.CharField(max_length=128)
+    main_category_name = models.ForeignKey(MainCategory, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.sub_category_name
